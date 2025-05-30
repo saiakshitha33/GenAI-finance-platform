@@ -2,7 +2,7 @@
 
 A Retrieval-Augmented Generation (RAG) system designed to empower enterprise finance teams (e.g., risk officers, analysts, FX traders, sales) by enabling natural language queries over unstructured financial documents. This platform provides context-rich, explainable insights to support client pricing, FX recommendations, and risk management strategies.
 
-## 🌟 Project Overview
+## Project Overview
 
 This project addresses the challenge faced by financial analysts and client servicing teams in locating up-to-date, relevant insights across fragmented systems (e.g., PDFs, emails, market reports). By leveraging AI and semantic search, the platform:
 
