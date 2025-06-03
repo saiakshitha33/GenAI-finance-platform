@@ -27,7 +27,11 @@ vector_store = Chroma.from_documents(
 retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 5})
 
 # Step 4: Memory + Chat Model
-memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+memory = ConversationBufferMemory(
+    memory_key="chat_history",
+    return_messages=True,
+    output_key="answer"  # Explicitly set output_key for memory
+)
 llm = ChatOpenAI(model_name="gpt-4", temperature=0.2, openai_api_key=OPENAI_API_KEY)
 
 # Step 5: Conversational Chain

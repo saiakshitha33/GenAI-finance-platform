@@ -1,56 +1,72 @@
 import os
-import time
+import shutil
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+from langchain_openai import OpenAIEmbeddings  # Updated import
+from langchain_chroma import Chroma
 from data_ingestion import load_and_split_docs
-from langchain_community.embeddings import OpenAIEmbeddings
-from langchain_community.vectorstores import Chroma
 from dotenv import load_dotenv
+import logging
+import time
+
+# Setup logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 
 # Load environment variables
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 VECTOR_DB_PATH = "./chroma"
-FINANCE_DOCS_PATH = "./finance_docs"
 
-# Reindex function
+# Re-index documents
 def reindex_documents():
-    print("[INFO] Re-indexing started...")
-    docs = load_and_split_docs(FINANCE_DOCS_PATH)
-    embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
+    logging.info("Re-indexing started...")
+    try:
+        # Load and split documents
+        docs = load_and_split_docs("./finance_docs")
+        embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
 
-    if os.path.exists(VECTOR_DB_PATH):
-        for file in os.listdir(VECTOR_DB_PATH):
-            os.remove(os.path.join(VECTOR_DB_PATH, file))
+        # Clear existing Chroma database
+        if os.path.exists(VECTOR_DB_PATH):
+            try:
+                # Attempt to delete the collection
+                vector_store = Chroma(persist_directory=VECTOR_DB_PATH, embedding_function=embeddings)
+                vector_store.delete_collection()  # Delete the default collection
+                logging.info("Cleared existing Chroma collection.")
+            except Exception as e:
+                logging.warning(f"Failed to delete collection: {str(e)}. Falling back to directory deletion.")
+                # Fallback: Delete the entire directory
+                shutil.rmtree(VECTOR_DB_PATH, ignore_errors=True)
+                os.makedirs(VECTOR_DB_PATH, exist_ok=True)
 
-    vector_store = Chroma.from_documents(
-        documents=docs,
-        embedding=embeddings,
-        persist_directory=VECTOR_DB_PATH
-    )
-    vector_store.persist()
-    print("[INFO] Re-indexing completed.")
+        # Re-index documents
+        Chroma.from_documents(
+            documents=docs,
+            embedding=embeddings,
+            persist_directory=VECTOR_DB_PATH
+        )
+        logging.info("Re-indexing completed.")
+    except Exception as e:
+        logging.error(f"Re-indexing failed: {str(e)}")
 
-# Watchdog handler
-class FinanceDocsHandler(FileSystemEventHandler):
+# Watchdog event handler
+class FileChangeHandler(FileSystemEventHandler):
     def on_any_event(self, event):
         if event.is_directory:
             return
-        if event.event_type in ("created", "modified", "deleted"):
-            print(f"[WATCHDOG] Detected change: {event.event_type} - {event.src_path}")
-            reindex_documents()
+        logging.info(f"Detected change: {event.event_type} - {event.src_path}")
+        # Add a small delay to ensure file operations are complete
+        time.sleep(1)
+        reindex_documents()
 
-# Watcher setup
+# Watchdog observer
 def start_watching():
-    event_handler = FinanceDocsHandler()
     observer = Observer()
-    observer.schedule(event_handler, path=FINANCE_DOCS_PATH, recursive=False)
+    observer.schedule(FileChangeHandler(), path="./finance_docs", recursive=True)
     observer.start()
-    print(f"[WATCHDOG] Watching folder: {FINANCE_DOCS_PATH}")
-
+    logging.info("Watching folder: ./finance_docs")
     try:
         while True:
-            time.sleep(10)
+            time.sleep(1)
     except KeyboardInterrupt:
         observer.stop()
     observer.join()
