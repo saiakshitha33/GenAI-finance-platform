@@ -4,6 +4,7 @@ from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import Chroma
 from langchain.prompts import PromptTemplate
 from langchain.chains import create_retrieval_chain
+from langchain_community.chat_models import ChatOpenAI
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from data_ingestion import load_and_split_docs
 
@@ -48,3 +49,6 @@ if __name__ == "__main__":
     result = qa_chain.invoke({"input": query})
     print("\nAnswer:\n", result["answer"])
     print("\nSource Documents:\n", result["context"])
+
+
+
