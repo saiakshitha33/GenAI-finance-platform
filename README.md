@@ -1,6 +1,6 @@
 # GenAI-Powered Financial Intelligence Platform
 
-A Retrieval-Augmented Generation (RAG) system designed to empower enterprise finance teams (e.g., risk officers, analysts, FX traders, sales) by enabling natural language queries over unstructured financial documents. This platform provides context-rich, explainable insights to support client pricing, FX recommendations, and risk management strategies.
+Built an end-to-end Retrieval-Augmented Generation (RAG) based intelligent assistant for the financial services domain, integrating unstructured PDFs and structured databases into a single natural language Q&A system. The system supports contextual conversations, SQL query generation, dynamic document updates, and analytical dashboards
 
 ## Project Overview
 
