@@ -4,6 +4,8 @@ from conversational_chain import conversational_chain  # ✅ New chain with memo
 import csv
 from datetime import datetime
 from fastapi.responses import JSONResponse
+from sql_qa_chain import sql_chain      # ← import the module above
+
 
 app = FastAPI()
 
@@ -59,3 +61,20 @@ def get_logs():
 @app.get("/")
 def root():
     return {"message": "RAG-powered Financial QA system with conversational memory is live."}
+
+
+
+class SQLQueryRequest(BaseModel):
+    question: str
+
+@app.post("/sql")
+def run_sql(req: SQLQueryRequest):
+    """
+    Natural-language question → SQL query → result
+    """
+    try:
+        result = sql_chain.run(req.question)
+        # Log question & (formatted) result to CSV if you like …
+        return {"question": req.question, "result": result}
+    except Exception as e:
+        return {"error": str(e)}
